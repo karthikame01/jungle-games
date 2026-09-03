@@ -1,0 +1,1040 @@
+<title>Mango Tree Math</title>
+<meta name="description" content="Help Motu the monkey leap to the correct answer on the mango tree — pick wrong and he tumbles down giggling.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@600;700;800&display=swap">
+<style>
+  :root{
+    --sky-top:#FFE49A;
+    --sky-bottom:#FFF6DE;
+    --cloud:#FFFDF8;
+    --leaf-deep:#2F6B3A;
+    --leaf-mid:#4E9351;
+    --leaf-light:#7FBB5C;
+    --bark:#8B5A2B;
+    --bark-dark:#6B3F1D;
+    --mango:#FF9F33;
+    --mango-deep:#E4620C;
+    --mango-leaf:#3E7D33;
+    --ground:#B7D96B;
+    --ground-deep:#94BE47;
+    --ink:#3A2A19;
+    --cream:#FFF8E7;
+    --cream-edge:#EBD9A9;
+    --berry:#E0555A;
+    --berry-deep:#B93A3F;
+    --gold:#FFD34D;
+    --monkey-fur:#A9713F;
+    --monkey-fur-dark:#8C5A2E;
+    --monkey-tan:#F0C989;
+    --monkey-face:#F3D9A4;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    background:var(--sky-bottom);
+    font-family:'Nunito',ui-rounded,'Segoe UI',sans-serif;
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:20px 14px 32px;
+  }
+
+  .wrap{
+    width:100%;
+    max-width:720px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+
+  header.title-block{
+    text-align:center;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  header.title-block h1{
+    font-family:'Baloo 2',ui-rounded,sans-serif;
+    font-weight:800;
+    font-size:clamp(28px,5.4vw,40px);
+    color:var(--leaf-deep);
+    margin:0;
+    text-shadow:0 2px 0 rgba(255,255,255,.5);
+    text-wrap:balance;
+  }
+  header.title-block p{
+    margin:0;
+    font-weight:700;
+    font-size:14px;
+    color:var(--bark-dark);
+    opacity:.85;
+  }
+
+  /* ---------- HUD ---------- */
+  .hud{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+  }
+  .pill{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    background:var(--cream);
+    border:2px solid var(--cream-edge);
+    border-radius:999px;
+    padding:7px 14px;
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:16px;
+    color:var(--bark-dark);
+    box-shadow:0 2px 0 var(--cream-edge);
+  }
+  .pill span.num{ font-variant-numeric:tabular-nums; min-width:1.4ch; text-align:right; }
+  .pill svg{ width:20px; height:20px; flex:none; }
+
+  .hud-right{ display:flex; gap:8px; }
+  .icon-btn{
+    background:var(--cream);
+    border:2px solid var(--cream-edge);
+    border-radius:999px;
+    width:38px;height:38px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    box-shadow:0 2px 0 var(--cream-edge);
+  }
+  .icon-btn:focus-visible, button:focus-visible{
+    outline:3px solid var(--mango-deep);
+    outline-offset:2px;
+  }
+  .icon-btn svg{ width:18px;height:18px; }
+
+  /* ---------- Equation banner ---------- */
+  .equation-banner{
+    align-self:center;
+    background:var(--cream);
+    border:3px solid var(--cream-edge);
+    border-radius:22px;
+    padding:10px 30px;
+    box-shadow:0 4px 0 var(--cream-edge);
+  }
+  .equation-banner .eq{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    font-size:clamp(26px,6vw,40px);
+    font-variant-numeric:tabular-nums;
+    color:var(--mango-deep);
+    letter-spacing:1px;
+  }
+  .equation-banner .eq .qmark{ color:var(--leaf-deep); }
+
+  /* ---------- Stage ---------- */
+  .stage{
+    position:relative;
+    width:100%;
+    aspect-ratio:5/4;
+    border-radius:28px;
+    overflow:hidden;
+    background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-bottom) 62%);
+    border:4px solid var(--cream-edge);
+    box-shadow:0 8px 0 var(--cream-edge), 0 10px 24px rgba(107,63,29,.18);
+  }
+
+  .cloud{
+    position:absolute;
+    background:var(--cloud);
+    border-radius:50%;
+    opacity:.9;
+  }
+
+  .ground{
+    position:absolute; left:0; right:0; bottom:0; height:16%;
+    background:linear-gradient(180deg,var(--ground) 0%, var(--ground-deep) 100%);
+    border-top:4px solid #86AE49;
+  }
+
+  .trunk{
+    position:absolute;
+    left:50%; bottom:12%;
+    width:13%; height:46%;
+    background:linear-gradient(90deg,var(--bark-dark),var(--bark) 45%, var(--bark-dark));
+    transform:translateX(-50%);
+    border-radius:10px 10px 4px 4px;
+  }
+  .trunk::before, .trunk::after{
+    content:"";
+    position:absolute;
+    background:var(--bark-dark);
+    border-radius:14px;
+  }
+  .trunk::before{ width:34%; height:120%; left:-20%; bottom:-4%; transform:rotate(18deg); }
+  .trunk::after{ width:34%; height:120%; right:-20%; bottom:-4%; transform:rotate(-18deg); }
+
+  .canopy-blob{
+    position:absolute;
+    border-radius:50%;
+    background:var(--leaf-mid);
+  }
+
+  .branch{
+    position:absolute;
+    height:8px;
+    background:var(--bark);
+    border-radius:6px;
+    transform-origin:0 50%;
+  }
+
+  .mango-btn{
+    position:absolute;
+    transform:translate(-50%,-50%);
+    background:none;
+    border:none;
+    padding:0;
+    cursor:pointer;
+    width:15%;
+    aspect-ratio:1;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .mango-btn .mango-shape{
+    position:relative;
+    width:100%;height:100%;
+    border-radius:48% 52% 55% 45%/55% 50% 50% 45%;
+    background:radial-gradient(circle at 34% 30%, #FFC066 0%, var(--mango) 45%, var(--mango-deep) 100%);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 3px 0 rgba(107,63,29,.35);
+    transition:transform .15s ease;
+  }
+  .mango-btn .mango-leaf{
+    position:absolute; top:-14%; left:50%;
+    width:34%; height:22%;
+    background:var(--mango-leaf);
+    border-radius:0 100% 0 100%;
+    transform:translateX(-50%) rotate(-15deg);
+  }
+  .mango-btn .num{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    font-size:clamp(15px,3.4vw,22px);
+    color:#5A2E00;
+    font-variant-numeric:tabular-nums;
+  }
+  .mango-btn:hover .mango-shape, .mango-btn:focus-visible .mango-shape{
+    transform:scale(1.08) rotate(-3deg);
+  }
+  .mango-btn:disabled{ cursor:default; }
+
+  .mango-btn.correct-pop .mango-shape{
+    animation:popAway .5s ease forwards;
+  }
+  .mango-btn.wrong-crack .mango-shape{
+    animation:crackShake .45s ease;
+  }
+  .mango-btn.wrong-crack .crack-line{
+    opacity:1;
+  }
+  .crack-line{
+    position:absolute; inset:0;
+    opacity:0;
+    pointer-events:none;
+  }
+
+  @keyframes popAway{
+    0%{ transform:scale(1); }
+    35%{ transform:scale(1.35) rotate(8deg); }
+    100%{ transform:scale(0) rotate(30deg); opacity:0; }
+  }
+  @keyframes crackShake{
+    0%,100%{ transform:translateX(0) rotate(0); }
+    20%{ transform:translateX(-4px) rotate(-6deg); }
+    40%{ transform:translateX(4px) rotate(6deg); }
+    60%{ transform:translateX(-3px) rotate(-4deg); }
+    80%{ transform:translateX(3px) rotate(3deg); }
+  }
+
+  /* ---------- Monkey ---------- */
+  .monkey{
+    position:absolute;
+    width:15%;
+    aspect-ratio:84/100;
+    left:50%; top:66%;
+    transform:translate(-50%,-50%);
+    transition:left .55s cubic-bezier(.34,1.56,.64,1), top .55s cubic-bezier(.34,1.56,.64,1);
+    z-index:5;
+  }
+  .monkey-shadow{
+    position:absolute;
+    bottom:-8%;
+    left:50%;
+    width:70%;
+    height:14%;
+    background:rgba(60,40,20,.28);
+    border-radius:50%;
+    transform:translateX(-50%);
+    transition:opacity .3s ease, width .3s ease;
+  }
+  .monkey.airborne .monkey-shadow{ opacity:.4; width:45%; }
+
+  .monkey-body-wrap{
+    position:absolute; inset:0;
+  }
+  .monkey.idle .monkey-body-wrap{ animation:idleBob 2.4s ease-in-out infinite; }
+  @keyframes idleBob{
+    0%,100%{ transform:translateY(0); }
+    50%{ transform:translateY(-3%); }
+  }
+
+  .m-tail{
+    position:absolute;
+    left:8%; top:30%;
+    width:28%; height:55%;
+    border:5px solid var(--monkey-fur-dark);
+    border-right-color:transparent;
+    border-bottom-color:transparent;
+    border-radius:50%;
+    transform-origin:100% 100%;
+    animation:tailSway 2.6s ease-in-out infinite;
+  }
+  @keyframes tailSway{
+    0%,100%{ transform:rotate(0deg); }
+    50%{ transform:rotate(-12deg); }
+  }
+
+  .m-arm{
+    position:absolute;
+    width:20%; height:38%;
+    background:var(--monkey-fur);
+    border-radius:40%;
+  }
+  .m-arm.left{ left:2%; top:42%; transform:rotate(18deg); }
+  .m-arm.right{ right:2%; top:42%; transform:rotate(-18deg); }
+
+  .m-body{
+    position:absolute;
+    left:18%; top:38%;
+    width:64%; height:56%;
+    background:var(--monkey-fur);
+    border-radius:46% 46% 50% 50%/50% 50% 55% 55%;
+  }
+  .m-belly{
+    position:absolute;
+    left:24%; top:14%;
+    width:52%; height:60%;
+    background:var(--monkey-tan);
+    border-radius:50%;
+  }
+
+  .m-head{
+    position:absolute;
+    left:14%; top:0;
+    width:72%; height:52%;
+    background:var(--monkey-fur);
+    border-radius:50%;
+  }
+  .m-ear{
+    position:absolute; top:2%;
+    width:26%; height:26%;
+    background:var(--monkey-fur);
+    border-radius:50%;
+  }
+  .m-ear.left{ left:-6%; }
+  .m-ear.right{ right:-6%; }
+  .m-ear::after{
+    content:"";
+    position:absolute; inset:22%;
+    background:var(--monkey-tan);
+    border-radius:50%;
+  }
+  .m-face{
+    position:absolute;
+    left:16%; top:34%;
+    width:68%; height:60%;
+    background:var(--monkey-face);
+    border-radius:50%;
+  }
+  .m-eye{
+    position:absolute; top:28%;
+    width:15%; height:15%;
+    background:var(--ink);
+    border-radius:50%;
+  }
+  .m-eye.left{ left:20%; }
+  .m-eye.right{ right:20%; }
+  .monkey.idle .m-eye{ animation:blink 4.2s ease-in-out infinite; }
+  @keyframes blink{ 0%,92%,100%{ transform:scaleY(1); } 95%{ transform:scaleY(.1); } }
+
+  .m-mouth{
+    position:absolute; left:32%; top:58%;
+    width:36%; height:18%;
+    border-bottom:4px solid var(--bark-dark);
+    border-radius:0 0 50% 50%;
+  }
+
+  .m-stars{
+    position:absolute; top:-30%; left:50%;
+    width:120%;
+    transform:translateX(-50%);
+    display:flex;
+    justify-content:space-between;
+    opacity:0;
+    pointer-events:none;
+  }
+  .m-stars svg{ width:16%; }
+  .monkey.dizzy .m-stars{ opacity:1; animation:starsSpin 1s linear infinite; }
+  @keyframes starsSpin{ 0%{ transform:translateX(-50%) rotate(0deg); } 100%{ transform:translateX(-50%) rotate(360deg); } }
+
+  .monkey.leaping .monkey-body-wrap{ animation:leapArc .55s ease-in-out; }
+  @keyframes leapArc{
+    0%{ transform:translateY(0) rotate(0deg) scale(1,1); }
+    30%{ transform:translateY(-32%) rotate(-8deg) scale(.9,1.1); }
+    60%{ transform:translateY(-18%) rotate(6deg) scale(1.05,.95); }
+    100%{ transform:translateY(0) rotate(0deg) scale(1,1); }
+  }
+
+  .monkey.falling .monkey-body-wrap{
+    animation:fallDown .8s cubic-bezier(.55,0,1,.45) forwards;
+  }
+  @keyframes fallDown{
+    0%{ transform:translateY(0) rotate(0deg); opacity:1; }
+    60%{ transform:translateY(60%) rotate(160deg); opacity:1; }
+    100%{ transform:translateY(90%) rotate(220deg); opacity:0; }
+  }
+  .monkey.recovering .monkey-body-wrap{
+    animation:recoverPop .5s cubic-bezier(.34,1.56,.64,1) forwards;
+  }
+  @keyframes recoverPop{
+    0%{ transform:scale(.4); opacity:0; }
+    70%{ transform:scale(1.12); opacity:1; }
+    100%{ transform:scale(1); opacity:1; }
+  }
+
+  /* ---------- speech bubble ---------- */
+  .speech{
+    position:absolute;
+    top:6%; left:50%;
+    transform:translateX(-50%) scale(.85);
+    background:var(--cream);
+    border:3px solid var(--cream-edge);
+    border-radius:16px;
+    padding:6px 16px;
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:clamp(13px,2.8vw,17px);
+    color:var(--berry-deep);
+    opacity:0;
+    transition:opacity .25s ease, transform .25s ease;
+    white-space:nowrap;
+    z-index:6;
+  }
+  .speech.show{ opacity:1; transform:translateX(-50%) scale(1); }
+  .speech.happy{ color:var(--leaf-deep); }
+
+  /* ---------- confetti ---------- */
+  .confetti-piece{
+    position:absolute;
+    width:9px;height:9px;
+    border-radius:2px;
+    pointer-events:none;
+    z-index:7;
+    animation:confettiFall 1s ease-out forwards;
+  }
+  @keyframes confettiFall{
+    0%{ transform:translate(0,0) rotate(0deg); opacity:1; }
+    100%{ transform:translate(var(--dx),var(--dy)) rotate(var(--rot)); opacity:0; }
+  }
+
+  /* ---------- Ground cheer squad ---------- */
+  .cheer-squad{
+    position:absolute;
+    bottom:1%;
+    left:0; right:0;
+    display:flex;
+    justify-content:space-between;
+    padding:0 2%;
+    z-index:3;
+    pointer-events:none;
+  }
+  .cheer-monkey{
+    position:relative;
+    width:15%;
+    aspect-ratio:74/96;
+  }
+  .cheer-monkey.right{ transform:scaleX(-1); }
+
+  .cm-arm{
+    position:absolute;
+    bottom:32%;
+    width:22%; height:42%;
+    background:var(--monkey-fur);
+    border-radius:40%;
+    transform-origin:50% 90%;
+  }
+  .cm-arm.cm-arm-l{ left:-4%; transform:rotate(18deg); }
+  .cm-arm.cm-arm-r{ right:-4%; transform:rotate(-18deg); }
+
+  .cheer-squad.happy .cm-arm-l{ animation:waveL .3s ease-in-out 3; }
+  .cheer-squad.happy .cm-arm-r{ animation:waveR .3s ease-in-out 3; }
+  @keyframes waveL{
+    0%,100%{ transform:rotate(-130deg); }
+    50%{ transform:rotate(-165deg); }
+  }
+  @keyframes waveR{
+    0%,100%{ transform:rotate(130deg); }
+    50%{ transform:rotate(165deg); }
+  }
+  .cheer-squad.worried .cm-arm-l{ transform:rotate(70deg); }
+  .cheer-squad.worried .cm-arm-r{ transform:rotate(-70deg); }
+
+  .cm-body{
+    position:absolute; left:14%; bottom:0;
+    width:72%; height:58%;
+    background:var(--monkey-fur);
+    border-radius:44% 44% 30% 30%/50% 50% 20% 20%;
+  }
+  .cm-belly{
+    position:absolute; left:24%; top:16%;
+    width:52%; height:60%;
+    background:var(--monkey-tan);
+    border-radius:50%;
+  }
+  .cm-head{
+    position:absolute; left:10%; bottom:46%;
+    width:80%; height:58%;
+    background:var(--monkey-fur);
+    border-radius:50%;
+  }
+  .cm-ear{
+    position:absolute; top:6%;
+    width:26%; height:26%;
+    background:var(--monkey-fur);
+    border-radius:50%;
+  }
+  .cm-ear.l{ left:-6%; } .cm-ear.r{ right:-6%; }
+  .cm-face{
+    position:absolute; left:14%; top:32%;
+    width:72%; height:62%;
+    background:var(--monkey-face);
+    border-radius:50%;
+  }
+  .cm-brow{
+    position:absolute; top:12%;
+    width:26%; height:9%;
+    background:var(--bark-dark);
+    border-radius:4px;
+    opacity:0;
+    transition:opacity .2s ease, transform .2s ease;
+  }
+  .cm-brow.l{ left:16%; transform:rotate(18deg); }
+  .cm-brow.r{ right:16%; transform:rotate(-18deg); }
+  .cheer-squad.worried .cm-brow{ opacity:1; }
+  .cheer-squad.worried .cm-brow.l{ transform:rotate(-14deg); }
+  .cheer-squad.worried .cm-brow.r{ transform:rotate(14deg); }
+
+  .cm-eye{
+    position:absolute; top:34%;
+    width:16%; height:16%;
+    background:var(--ink);
+    border-radius:50%;
+    transition:transform .2s ease;
+  }
+  .cm-eye.l{ left:22%; } .cm-eye.r{ right:22%; }
+  .cheer-squad.happy .cm-eye{ transform:scaleY(.35) translateY(-30%); }
+  .cheer-squad.worried .cm-eye{ transform:scale(1.25); }
+
+  .cm-mouth{
+    position:absolute; left:32%; top:60%;
+    width:34%; height:18%;
+    border-radius:0 0 50% 50%;
+    border-bottom:3px solid var(--bark-dark);
+    transition:all .2s ease;
+  }
+  .cheer-squad.happy .cm-mouth{
+    width:46%; height:28%; left:27%; top:54%;
+    border:none;
+    background:var(--bark-dark);
+    border-radius:0 0 50% 50%;
+  }
+  .cheer-squad.worried .cm-mouth{
+    width:20%; height:20%; left:40%; top:58%;
+    border:2px solid var(--bark-dark);
+    border-radius:50%;
+    background:#5A2E00;
+  }
+
+  .cm-sweat{
+    position:absolute; top:2%; right:2%;
+    width:12%; height:16%;
+    background:#8FD3F4;
+    border-radius:0 50% 50% 50%;
+    transform:rotate(45deg);
+    opacity:0;
+  }
+  .cheer-squad.worried .cm-sweat{
+    opacity:1;
+    animation:sweatDrip .9s ease;
+  }
+  @keyframes sweatDrip{
+    0%{ opacity:0; transform:rotate(45deg) translateY(-40%); }
+    30%{ opacity:1; transform:rotate(45deg) translateY(0); }
+    100%{ opacity:0; transform:rotate(45deg) translateY(60%); }
+  }
+
+  .cheer-squad:not(.happy):not(.worried) .cm-head{ animation:idleBob 2.8s ease-in-out infinite; }
+
+  /* ---------- Party balloons (launch from the ground) ---------- */
+  .party-balloon{
+    position:absolute;
+    bottom:10%;
+    width:7%;
+    aspect-ratio:0.82/1;
+    border-radius:50% 50% 50% 50%/58% 58% 42% 42%;
+    z-index:7;
+    pointer-events:none;
+    animation:floatUp 2.1s cubic-bezier(.25,.6,.4,1) forwards;
+    box-shadow:inset -4px -4px 0 rgba(0,0,0,.08);
+  }
+  .party-balloon::before{
+    content:"";
+    position:absolute; left:50%; bottom:-10%;
+    width:0; height:0;
+    border-left:5px solid transparent;
+    border-right:5px solid transparent;
+    border-top:7px solid currentColor;
+    transform:translateX(-50%);
+  }
+  .party-balloon::after{
+    content:"";
+    position:absolute; left:50%; bottom:-46%;
+    width:1px; height:38%;
+    background:var(--bark-dark);
+    opacity:.5;
+  }
+  @keyframes floatUp{
+    0%{ transform:translate(0,0) rotate(0deg); opacity:1; }
+    100%{ transform:translate(var(--drift),-420%) rotate(var(--rot)); opacity:0; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .cheer-squad.happy .cm-arm-l, .cheer-squad.happy .cm-arm-r, .cheer-squad .cm-head{ animation:none !important; }
+    .party-balloon{ animation:none !important; opacity:0; }
+  }
+
+  footer.note{
+    text-align:center;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--bark-dark);
+    opacity:.7;
+    margin:0;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .monkey.idle .monkey-body-wrap, .m-tail, .monkey.idle .m-eye{ animation:none !important; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="title-block">
+    <h1>Mango Tree Math</h1>
+    <p>Tap the mango with the right answer to help Motu leap across!</p>
+  </header>
+
+  <div class="hud">
+    <div class="pill" aria-label="Mangoes collected">
+      <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="13" r="8" fill="#FF9F33" stroke="#E4620C" stroke-width="1.5"/><path d="M9 5c1.5-2 4.5-2.3 6-1" stroke="#3E7D33" stroke-width="2" stroke-linecap="round"/></svg>
+      <span class="num" id="score">0</span>
+    </div>
+    <div class="pill" aria-label="Current streak">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 2c2 4-2 5-2 8a4 4 0 108 0c0-1-1-2-1-2 1.5 3-1 6-1 6-3 0-6-2-6-6 0-3 2-4 2-6z" fill="#FFD34D" stroke="#E4620C" stroke-width="1"/></svg>
+      <span class="num" id="streak">0</span>
+    </div>
+    <div class="hud-right">
+      <button class="icon-btn" id="soundBtn" aria-label="Toggle sound" aria-pressed="true" type="button"></button>
+    </div>
+  </div>
+
+  <div class="equation-banner" id="equationBanner">
+    <span class="eq" id="equationText" aria-live="polite">6 + 1 = <span class="qmark">?</span></span>
+  </div>
+
+  <div class="stage" id="stage" role="group" aria-label="Mango tree math game">
+    <div class="cloud" style="width:60px;height:24px;top:6%;left:8%;"></div>
+    <div class="cloud" style="width:44px;height:20px;top:4%;left:70%;"></div>
+    <div class="cloud" style="width:34px;height:16px;top:14%;left:82%;"></div>
+
+    <div class="canopy-blob" style="width:46%;height:38%;left:12%;top:2%;background:var(--leaf-deep);"></div>
+    <div class="canopy-blob" style="width:50%;height:42%;left:44%;top:-4%;"></div>
+    <div class="canopy-blob" style="width:40%;height:36%;left:52%;top:8%;background:var(--leaf-light);"></div>
+    <div class="canopy-blob" style="width:34%;height:30%;left:6%;top:14%;background:var(--leaf-light);"></div>
+
+    <div class="branch" style="width:26%; left:8%; top:34%; transform:rotate(14deg);"></div>
+    <div class="branch" style="width:20%; left:42%; top:18%; transform:rotate(-4deg);"></div>
+    <div class="branch" style="width:24%; right:6%; left:70%; top:36%; transform:rotate(-16deg);"></div>
+
+    <button class="mango-btn" id="branch0" style="left:20%; top:30%;" type="button">
+      <span class="mango-shape">
+        <span class="mango-leaf"></span>
+        <span class="num">0</span>
+      </span>
+    </button>
+    <button class="mango-btn" id="branch1" style="left:50%; top:13%;" type="button">
+      <span class="mango-shape">
+        <span class="mango-leaf"></span>
+        <span class="num">0</span>
+      </span>
+    </button>
+    <button class="mango-btn" id="branch2" style="left:80%; top:32%;" type="button">
+      <span class="mango-shape">
+        <span class="mango-leaf"></span>
+        <span class="num">0</span>
+      </span>
+    </button>
+
+    <div class="trunk"></div>
+    <div class="ground"></div>
+
+    <div class="cheer-squad" id="cheerSquad" aria-hidden="true">
+      <div class="cheer-monkey left">
+        <div class="cm-arm cm-arm-l"></div>
+        <div class="cm-arm cm-arm-r"></div>
+        <div class="cm-body"><div class="cm-belly"></div></div>
+        <div class="cm-head">
+          <div class="cm-ear l"></div>
+          <div class="cm-ear r"></div>
+          <div class="cm-sweat"></div>
+          <div class="cm-face">
+            <div class="cm-brow l"></div>
+            <div class="cm-brow r"></div>
+            <div class="cm-eye l"></div>
+            <div class="cm-eye r"></div>
+            <div class="cm-mouth"></div>
+          </div>
+        </div>
+      </div>
+      <div class="cheer-monkey right">
+        <div class="cm-arm cm-arm-l"></div>
+        <div class="cm-arm cm-arm-r"></div>
+        <div class="cm-body"><div class="cm-belly"></div></div>
+        <div class="cm-head">
+          <div class="cm-ear l"></div>
+          <div class="cm-ear r"></div>
+          <div class="cm-sweat"></div>
+          <div class="cm-face">
+            <div class="cm-brow l"></div>
+            <div class="cm-brow r"></div>
+            <div class="cm-eye l"></div>
+            <div class="cm-eye r"></div>
+            <div class="cm-mouth"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="monkey idle" id="monkey" style="left:50%; top:66%;">
+      <div class="monkey-shadow"></div>
+      <div class="m-stars">
+        <svg viewBox="0 0 24 24"><path fill="#FFD34D" d="M12 2l2.5 6.5L21 11l-6.5 2.5L12 20l-2.5-6.5L3 11l6.5-2.5z"/></svg>
+        <svg viewBox="0 0 24 24"><path fill="#FFD34D" d="M12 2l2.5 6.5L21 11l-6.5 2.5L12 20l-2.5-6.5L3 11l6.5-2.5z"/></svg>
+        <svg viewBox="0 0 24 24"><path fill="#FFD34D" d="M12 2l2.5 6.5L21 11l-6.5 2.5L12 20l-2.5-6.5L3 11l6.5-2.5z"/></svg>
+      </div>
+      <div class="speech" id="speech">Yay!</div>
+      <div class="monkey-body-wrap">
+        <div class="m-tail"></div>
+        <div class="m-arm left"></div>
+        <div class="m-arm right"></div>
+        <div class="m-body"><div class="m-belly"></div></div>
+        <div class="m-head">
+          <div class="m-ear left"></div>
+          <div class="m-ear right"></div>
+          <div class="m-face">
+            <div class="m-eye left"></div>
+            <div class="m-eye right"></div>
+            <div class="m-mouth"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="note">Grade 1 addition &amp; subtraction, made for little hands and giggly wrong answers.</p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var stage = document.getElementById('stage');
+  var monkey = document.getElementById('monkey');
+  var cheerSquad = document.getElementById('cheerSquad');
+  var speech = document.getElementById('speech');
+  var equationText = document.getElementById('equationText');
+  var scoreEl = document.getElementById('score');
+  var streakEl = document.getElementById('streak');
+  var soundBtn = document.getElementById('soundBtn');
+
+  var branches = [
+    { el: document.getElementById('branch0'), left: 20, top: 30 },
+    { el: document.getElementById('branch1'), left: 50, top: 13 },
+    { el: document.getElementById('branch2'), left: 80, top: 32 }
+  ];
+
+  var score = 0, streak = 0, locked = false, muted = false;
+  var current = null;
+
+  try {
+    muted = localStorage.getItem('mangoMathMuted') === '1';
+  } catch(e){}
+
+  function speakerIcon(isMuted){
+    if(isMuted){
+      return '<svg viewBox="0 0 24 24" fill="none"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="#8B5A2B"/><path d="M17 8l4 8M21 8l-4 8" stroke="#E0555A" stroke-width="2" stroke-linecap="round"/></svg>';
+    }
+    return '<svg viewBox="0 0 24 24" fill="none"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="#8B5A2B"/><path d="M16 9a4 4 0 010 6M18.5 7a7.5 7.5 0 010 10" stroke="#4E9351" stroke-width="2" stroke-linecap="round"/></svg>';
+  }
+  soundBtn.innerHTML = speakerIcon(muted);
+  soundBtn.setAttribute('aria-pressed', String(!muted));
+
+  soundBtn.addEventListener('click', function(){
+    muted = !muted;
+    soundBtn.innerHTML = speakerIcon(muted);
+    soundBtn.setAttribute('aria-pressed', String(!muted));
+    try { localStorage.setItem('mangoMathMuted', muted ? '1' : '0'); } catch(e){}
+  });
+
+  /* ---------------- audio ---------------- */
+  var actx = null;
+  function getCtx(){
+    if(!actx){
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if(AC) actx = new AC();
+    }
+    return actx;
+  }
+  function tone(freqFrom, freqTo, dur, startAt, type, peakGain){
+    var ctx = getCtx();
+    if(!ctx || muted) return;
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.type = type || 'sine';
+    var t0 = ctx.currentTime + startAt;
+    osc.frequency.setValueAtTime(freqFrom, t0);
+    osc.frequency.linearRampToValueAtTime(freqTo, t0 + dur);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.linearRampToValueAtTime(peakGain || 0.18, t0 + dur * 0.2);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.05);
+  }
+  function playCorrect(){
+    tone(520, 660, 0.14, 0, 'triangle', 0.2);
+    tone(660, 880, 0.18, 0.12, 'triangle', 0.2);
+  }
+  function playWrong(){
+    tone(380, 160, 0.35, 0, 'sawtooth', 0.14);
+  }
+
+  /* ---------------- helpers ---------------- */
+  function randInt(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+  function shuffle(arr){
+    for(var i = arr.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  function generateProblem(){
+    var isAdd = Math.random() < 0.55;
+    var a, b, answer, opSymbol;
+    if(isAdd){
+      a = randInt(0, 12);
+      b = randInt(0, 12 - Math.max(0, a - 8));
+      if(a + b > 20){ b = 20 - a; }
+      answer = a + b;
+      opSymbol = '+';
+    } else {
+      a = randInt(2, 20);
+      b = randInt(0, a);
+      answer = a - b;
+      opSymbol = '−';
+    }
+
+    var options = [answer];
+    var tries = [answer + 1, answer - 1, a, answer + 2, answer - 2, randInt(0, 20)];
+    for(var i = 0; i < tries.length && options.length < 3; i++){
+      var v = tries[i];
+      if(v >= 0 && v <= 20 && options.indexOf(v) === -1) options.push(v);
+    }
+    while(options.length < 3){
+      var r = randInt(0, 20);
+      if(options.indexOf(r) === -1) options.push(r);
+    }
+
+    return { a: a, b: b, answer: answer, opSymbol: opSymbol, options: shuffle(options) };
+  }
+
+  function renderProblem(problem){
+    equationText.innerHTML = problem.a + ' ' + problem.opSymbol + ' ' + problem.b + ' = <span class="qmark">?</span>';
+    branches.forEach(function(branch, idx){
+      var value = problem.options[idx];
+      branch.el.querySelector('.num').textContent = value;
+      branch.el.dataset.value = value;
+      branch.el.classList.remove('correct-pop', 'wrong-crack');
+      branch.el.style.visibility = 'visible';
+      branch.el.disabled = false;
+    });
+  }
+
+  function newRound(keepProblem){
+    if(!keepProblem){
+      current = generateProblem();
+    } else {
+      current.options = shuffle(current.options.slice());
+    }
+    renderProblem(current);
+  }
+
+  function setMonkeyPos(leftPct, topPct){
+    monkey.style.left = leftPct + '%';
+    monkey.style.top = topPct + '%';
+  }
+
+  function showSpeech(text, mood){
+    speech.textContent = text;
+    speech.className = 'speech show' + (mood === 'happy' ? ' happy' : '');
+    window.clearTimeout(showSpeech._t);
+    showSpeech._t = window.setTimeout(function(){
+      speech.classList.remove('show');
+    }, 1100);
+  }
+
+  var confettiColors = ['#FF9F33', '#FFD34D', '#7FBB5C', '#E0555A', '#4E9351'];
+  function spawnConfetti(xPct, yPct){
+    for(var i = 0; i < 14; i++){
+      var piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = xPct + '%';
+      piece.style.top = yPct + '%';
+      piece.style.background = confettiColors[randInt(0, confettiColors.length - 1)];
+      var dx = randInt(-70, 70);
+      var dy = randInt(40, 110);
+      piece.style.setProperty('--dx', dx + 'px');
+      piece.style.setProperty('--dy', dy + 'px');
+      piece.style.setProperty('--rot', randInt(90, 360) + 'deg');
+      stage.appendChild(piece);
+      (function(p){
+        window.setTimeout(function(){ p.remove(); }, 1050);
+      })(piece);
+    }
+  }
+
+  function pulseCheerSquad(mood, duration){
+    cheerSquad.classList.remove('happy', 'worried');
+    void cheerSquad.offsetWidth;
+    cheerSquad.classList.add(mood);
+    window.setTimeout(function(){
+      cheerSquad.classList.remove(mood);
+    }, duration);
+  }
+
+  var balloonColors = ['#FF9F33', '#E0555A', '#4E9351', '#3B8FD1', '#FFD34D'];
+  function spawnPartyBalloons(){
+    var count = 6;
+    for(var i = 0; i < count; i++){
+      var b = document.createElement('div');
+      b.className = 'party-balloon';
+      var leftPct = 8 + Math.random() * 84;
+      b.style.left = leftPct + '%';
+      var color = balloonColors[randInt(0, balloonColors.length - 1)];
+      b.style.background = color;
+      b.style.color = color;
+      b.style.setProperty('--drift', randInt(-40, 40) + 'px');
+      b.style.setProperty('--rot', randInt(-25, 25) + 'deg');
+      b.style.animationDelay = (i * 60) + 'ms';
+      stage.appendChild(b);
+      (function(el){
+        window.setTimeout(function(){ el.remove(); }, 2300);
+      })(b);
+    }
+  }
+
+  function handleCorrect(branch){
+    locked = true;
+    playCorrect();
+    pulseCheerSquad('happy', 900);
+    spawnPartyBalloons();
+    monkey.classList.remove('idle');
+    monkey.classList.add('airborne');
+    setMonkeyPos(branch.left, branch.top - 6);
+    monkey.classList.add('leaping');
+    showSpeech('Yum! Correct!', 'happy');
+
+    window.setTimeout(function(){
+      branch.el.classList.add('correct-pop');
+      spawnConfetti(branch.left, branch.top);
+    }, 260);
+
+    score += 1;
+    streak += 1;
+    scoreEl.textContent = score;
+    streakEl.textContent = streak;
+
+    window.setTimeout(function(){
+      monkey.classList.remove('leaping');
+      setMonkeyPos(50, 66);
+    }, 900);
+
+    window.setTimeout(function(){
+      monkey.classList.remove('airborne');
+      monkey.classList.add('idle');
+      locked = false;
+      newRound(false);
+    }, 1500);
+  }
+
+  function handleWrong(branch){
+    locked = true;
+    playWrong();
+    pulseCheerSquad('worried', 900);
+    branch.el.classList.add('wrong-crack');
+    streak = 0;
+    streakEl.textContent = streak;
+    showSpeech('Oops, try again!');
+
+    monkey.classList.remove('idle');
+    monkey.classList.add('falling');
+
+    window.setTimeout(function(){
+      monkey.classList.remove('falling');
+      setMonkeyPos(50, 66);
+      monkey.classList.add('recovering', 'dizzy');
+    }, 820);
+
+    window.setTimeout(function(){
+      monkey.classList.remove('recovering', 'dizzy');
+      monkey.classList.add('idle');
+      locked = false;
+      newRound(true);
+    }, 1650);
+  }
+
+  branches.forEach(function(branch){
+    branch.el.addEventListener('click', function(){
+      if(locked) return;
+      var chosen = Number(branch.el.dataset.value);
+      branches.forEach(function(b){ b.el.disabled = true; });
+      if(chosen === current.answer){
+        handleCorrect(branch);
+      } else {
+        handleWrong(branch);
+      }
+    });
+  });
+
+  newRound(false);
+})();
+</script>
