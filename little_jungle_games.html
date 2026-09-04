@@ -46,6 +46,15 @@
     --pt-ink:#2E2140;
     --pt-panel:#FFF8E7;
     --monkey-face:#F3D9A4;
+    --hp-sky-top:#7FD1F5;
+    --hp-sky-bottom:#D8F3FF;
+    --hp-water-top:#3FA9DC;
+    --hp-water-deep:#155E86;
+    --hp-water-shine:#BFEBFF;
+    --hp-frog:#7FBB5C;
+    --hp-frog-dark:#4E8A3A;
+    --hp-frog-belly:#EAF6D8;
+    --hp-lily-dark:#2F6B3A;
   }
 
   *{ box-sizing:border-box; }
@@ -1482,6 +1491,248 @@
     .mtm-monkey.idle .mtm-body-wrap, .mtm-tail, .mtm-monkey.idle .mtm-eye{ animation:none !important; }
     .game-card{ transition:none; }
   }
+
+  /* =======================================================
+     LILY PAD LEAP
+     ======================================================= */
+  .hp-header{ text-align:center; display:flex; flex-direction:column; gap:2px; }
+  .hp-header h2{
+    font-family:'Baloo 2',sans-serif; font-weight:800;
+    font-size:clamp(26px,5.4vw,36px); color:var(--hp-water-deep); margin:0; text-wrap:balance;
+  }
+  .hp-header p{ margin:0; font-weight:700; font-size:14px; color:var(--bark-dark); opacity:.85; }
+
+  .hp-hud{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .hp-life-wrap{ flex:1 1 140px; display:flex; flex-direction:column; gap:3px; min-width:0; }
+  .hp-life-label{
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:11px;
+    letter-spacing:.05em; text-transform:uppercase; color:var(--bark-dark); opacity:.75;
+  }
+  .hp-life-track{
+    height:14px; border-radius:999px; background:var(--cream-edge);
+    border:2px solid var(--cream-edge); overflow:hidden;
+  }
+  .hp-life-fill{
+    height:100%; width:100%; border-radius:999px;
+    background:linear-gradient(90deg,#7FBB5C,#4E9351);
+    transition:width .4s ease, background .4s ease;
+  }
+  .hp-life-fill.mid{ background:linear-gradient(90deg,#FFD34D,#E4620C); }
+  .hp-life-fill.low{ background:linear-gradient(90deg,#F0837E,#B93A3F); }
+
+  .hp-pill{
+    display:flex; align-items:center; gap:6px;
+    background:var(--cream); border:2px solid var(--cream-edge);
+    border-radius:999px; padding:6px 14px;
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:15px;
+    color:var(--ink); box-shadow:0 2px 0 var(--cream-edge); white-space:nowrap;
+  }
+  .hp-pill svg{ width:18px; height:18px; flex:none; }
+
+  .hp-icon-btn{
+    flex:none; background:var(--cream); border:2px solid var(--cream-edge);
+    border-radius:999px; width:38px; height:38px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    box-shadow:0 2px 0 var(--cream-edge);
+  }
+  .hp-icon-btn[hidden]{ display:none; }
+
+  .hp-equation-banner{
+    align-self:center; background:var(--cream); border:3px solid var(--cream-edge);
+    border-radius:22px; padding:10px 30px; box-shadow:0 4px 0 var(--cream-edge);
+  }
+  .hp-eq{
+    font-family:'Baloo 2',sans-serif; font-weight:800;
+    font-size:clamp(24px,5.6vw,36px); font-variant-numeric:tabular-nums;
+    color:var(--hp-water-deep); letter-spacing:.5px;
+  }
+  .hp-eq .qmark{ color:var(--leaf-deep); }
+
+  .hp-scene{
+    position:relative; width:100%; aspect-ratio:5/4;
+    border-radius:26px; overflow:hidden;
+    background:linear-gradient(180deg,var(--hp-sky-top) 0%, var(--hp-sky-bottom) 36%, var(--hp-water-top) 42%, var(--hp-water-deep) 100%);
+    border:4px solid var(--cream-edge); box-shadow:0 8px 0 var(--cream-edge);
+  }
+  .hp-shine{
+    position:absolute; height:5px; border-radius:999px;
+    background:var(--hp-water-shine); opacity:.55;
+  }
+
+  .hp-lanes{
+    position:absolute; left:0; right:0; top:12%;
+    display:flex; justify-content:space-around; gap:12px; padding:0 9%;
+  }
+  .hp-pad{
+    position:relative; flex:1; max-width:120px; margin:0 auto;
+    aspect-ratio:1; background:none; border:none; padding:0; cursor:pointer;
+  }
+  .hp-pad-shape{
+    position:relative; width:100%; height:100%;
+    background:radial-gradient(circle at 32% 28%, var(--leaf-light) 0%, var(--leaf-mid) 55%, var(--hp-lily-dark) 100%);
+    border-radius:48% 52% 55% 45%/55% 48% 52% 45%;
+    box-shadow:0 4px 0 rgba(10,40,50,.25), inset 0 -5px 8px rgba(0,0,0,.12);
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .hp-pad-num{
+    font-family:'Baloo 2',sans-serif; font-weight:800;
+    font-size:clamp(17px,4vw,25px); color:#1B3B25; font-variant-numeric:tabular-nums;
+  }
+  .hp-pad:hover .hp-pad-shape, .hp-pad:focus-visible .hp-pad-shape{ transform:scale(1.06); }
+  .hp-pad.selected .hp-pad-shape{
+    transform:scale(1.08);
+    box-shadow:0 0 0 4px var(--gold), 0 4px 0 rgba(10,40,50,.25);
+  }
+  .hp-pad.correct .hp-pad-shape{
+    animation:hpPadGood .5s ease forwards;
+    background:radial-gradient(circle at 32% 28%, #EAF9DC 0%, #DCEFCB 60%, var(--leaf-mid) 100%);
+  }
+  .hp-pad.wrong .hp-pad-shape{
+    animation:hpPadBad .45s ease;
+    background:radial-gradient(circle at 32% 28%, #FCE6E6 0%, #FBD9DA 60%, var(--berry) 100%);
+  }
+  @keyframes hpPadGood{ 0%{ transform:scale(1); } 40%{ transform:scale(1.18); } 100%{ transform:scale(1.05); } }
+  @keyframes hpPadBad{
+    0%,100%{ transform:translateX(0) scale(1); } 25%{ transform:translateX(-5px) rotate(-4deg); }
+    50%{ transform:translateX(5px) rotate(4deg); } 75%{ transform:translateX(-3px); }
+  }
+
+  .hp-frog-pad{
+    position:absolute; bottom:5%; left:50%; width:24%; aspect-ratio:1;
+    background:radial-gradient(circle at 32% 28%, var(--leaf-light) 0%, var(--leaf-mid) 55%, var(--hp-lily-dark) 100%);
+    border-radius:50% 50% 55% 45%/55% 45% 55% 50%;
+    box-shadow:0 4px 0 rgba(10,40,50,.25);
+    transform:translateX(-50%);
+    transition:left .35s cubic-bezier(.34,1.56,.64,1);
+    z-index:1;
+  }
+
+  .hp-frog{
+    position:absolute; bottom:9%; left:50%; width:17%; aspect-ratio:78/82;
+    transform:translateX(-50%);
+    transition:left .35s cubic-bezier(.34,1.56,.64,1);
+    z-index:5;
+  }
+  .hp-frog-shadow{
+    position:absolute; bottom:-6%; left:50%; width:64%; height:12%;
+    background:rgba(5,35,45,.28); border-radius:50%; transform:translateX(-50%);
+  }
+  .hp-frog-rig{ position:absolute; inset:0; }
+  .hp-frog.idle .hp-frog-rig{ animation:hpIdleBob 2.1s ease-in-out infinite; }
+  @keyframes hpIdleBob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-4%); } }
+
+  .hp-frog-leg{
+    position:absolute; bottom:6%; width:22%; height:20%;
+    background:var(--hp-frog-dark); border-radius:50%;
+  }
+  .hp-frog-leg.left{ left:2%; }
+  .hp-frog-leg.right{ right:2%; }
+
+  .hp-frog-body{
+    position:absolute; left:8%; top:20%; width:84%; height:66%;
+    background:var(--hp-frog);
+    border-radius:50% 50% 46% 46%/58% 58% 44% 44%;
+  }
+  .hp-frog-belly{
+    position:absolute; left:22%; top:42%; width:56%; height:46%;
+    background:var(--hp-frog-belly); border-radius:50%;
+  }
+  .hp-frog-eye{
+    position:absolute; top:-6%; width:34%; aspect-ratio:1;
+    background:var(--hp-frog); border-radius:50%;
+  }
+  .hp-frog-eye.left{ left:2%; } .hp-frog-eye.right{ right:2%; }
+  .hp-frog-eye::after{
+    content:""; position:absolute; inset:20%; background:#fff; border-radius:50%;
+  }
+  .hp-frog-pupil{
+    position:absolute; width:38%; height:38%; top:31%; left:31%;
+    background:var(--ink); border-radius:50%; z-index:1;
+  }
+  .hp-frog.idle .hp-frog-pupil{ animation:hpBlink 4.4s ease-in-out infinite; }
+  @keyframes hpBlink{ 0%,92%,100%{ transform:scaleY(1); } 95%{ transform:scaleY(.1); } }
+  .hp-frog-mouth{
+    position:absolute; left:30%; top:56%; width:40%; height:16%;
+    border-bottom:3px solid #2F5A22; border-radius:0 0 50% 50%;
+  }
+
+  .hp-frog.hop .hp-frog-rig{ animation:hpHopArc .38s ease-in-out; }
+  @keyframes hpHopArc{
+    0%{ transform:translateY(0) scaleY(1); }
+    35%{ transform:translateY(-38%) scaleY(1.08); }
+    100%{ transform:translateY(0) scaleY(1); }
+  }
+  .hp-frog.splash .hp-frog-rig{ animation:hpSplashDown .55s ease-in forwards; }
+  @keyframes hpSplashDown{
+    0%{ transform:translateY(0) rotate(0deg); opacity:1; }
+    100%{ transform:translateY(60%) rotate(35deg); opacity:0; }
+  }
+  .hp-frog.recovering .hp-frog-rig{ animation:hpRecoverPop .45s cubic-bezier(.34,1.56,.64,1) forwards; }
+  @keyframes hpRecoverPop{
+    0%{ transform:scale(.4); opacity:0; } 70%{ transform:scale(1.1); opacity:1; } 100%{ transform:scale(1); opacity:1; }
+  }
+
+  .hp-splash-ring{
+    position:absolute; border:3px solid var(--hp-water-shine);
+    border-radius:50%; opacity:.85; pointer-events:none;
+    transform:translate(-50%,-50%);
+    animation:hpRingExpand .6s ease-out forwards;
+  }
+  @keyframes hpRingExpand{ 0%{ width:8px; height:8px; opacity:.9; } 100%{ width:100px; height:100px; opacity:0; } }
+
+  .hp-speech{
+    position:absolute; top:2%; left:50%; transform:translateX(-50%) scale(.85);
+    background:var(--cream); border:3px solid var(--cream-edge); border-radius:16px;
+    padding:6px 16px; font-family:'Baloo 2',sans-serif; font-weight:700;
+    font-size:clamp(13px,2.8vw,17px); color:var(--leaf-deep);
+    opacity:0; transition:opacity .25s ease, transform .25s ease;
+    white-space:nowrap; z-index:6;
+  }
+  .hp-speech.show{ opacity:1; transform:translateX(-50%) scale(1); }
+  .hp-speech.oops{ color:var(--berry-deep); }
+
+  .hp-confetti{
+    position:absolute; width:8px; height:8px; border-radius:2px;
+    pointer-events:none; z-index:7; animation:hpConfettiFall 1s ease-out forwards;
+  }
+  @keyframes hpConfettiFall{
+    0%{ transform:translate(0,0) rotate(0deg); opacity:1; }
+    100%{ transform:translate(var(--dx),var(--dy)) rotate(var(--rot)); opacity:0; }
+  }
+
+  .hp-note{ text-align:center; font-size:12.5px; font-weight:700; color:var(--bark-dark); opacity:.75; margin:0; }
+
+  .hp-modal-backdrop{
+    position:fixed; inset:0; background:rgba(10,40,55,.5);
+    display:flex; align-items:center; justify-content:center; padding:20px; z-index:50;
+  }
+  .hp-modal-backdrop[hidden]{ display:none; }
+  .hp-modal-panel{
+    background:var(--cream); border:3px solid var(--cream-edge); border-radius:22px;
+    padding:26px 26px; max-width:340px; width:100%;
+    box-shadow:0 10px 0 var(--cream-edge);
+    display:flex; flex-direction:column; align-items:center; gap:12px; text-align:center;
+  }
+  .hp-modal-panel h3{
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:22px; color:var(--hp-water-deep); margin:0;
+  }
+  .hp-modal-panel p{ margin:0; font-weight:700; font-size:15px; color:var(--bark-dark); }
+  .hp-modal-actions{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:4px; }
+  .hp-btn-primary{
+    background:var(--hp-water-top); color:#fff; border:none; border-radius:999px;
+    padding:10px 24px; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:15px;
+    cursor:pointer; box-shadow:0 3px 0 var(--hp-water-deep);
+  }
+  .hp-btn-secondary{
+    background:transparent; color:var(--ink); border:2px solid var(--cream-edge);
+    border-radius:999px; padding:9px 20px; font-family:'Baloo 2',sans-serif; font-weight:700;
+    font-size:14px; cursor:pointer;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .hp-frog.idle .hp-frog-rig{ animation:none !important; }
+  }
 </style>
 
 <!-- ============================= HOME VIEW ============================= -->
@@ -1849,6 +2100,83 @@
   </div>
 </div>
 
+<!-- ============================= LILY PAD LEAP VIEW ============================= -->
+<div class="game-view" id="view-hop" hidden>
+  <div class="game-view-inner">
+    <button class="back-btn" id="backBtn-hop" type="button">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Back to Jungle
+    </button>
+
+    <header class="hp-header">
+      <h2>Lily Pad Leap</h2>
+      <p>Help Hopper the Frog hop to the correct answer — arrow keys to move, Space or ↑ to jump!</p>
+    </header>
+
+    <div class="hp-hud">
+      <div class="hp-life-wrap">
+        <span class="hp-life-label">Lives</span>
+        <div class="hp-life-track"><div class="hp-life-fill" id="hp-lifeFill"></div></div>
+      </div>
+      <div class="hp-pill" aria-label="Lily pads crossed">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="13" r="8" fill="#4E9351" stroke="#2F6B3A" stroke-width="1.5"/></svg>
+        <span id="hp-distance">0</span>
+      </div>
+      <div class="hp-pill" aria-label="Best ever">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M7 4h10v3a5 5 0 01-10 0V4z" fill="#FFD34D" stroke="#E4620C" stroke-width="1.2"/><path d="M7 5H4v1a4 4 0 004 4M17 5h3v1a4 4 0 01-4 4" stroke="#E4620C" stroke-width="1.4" stroke-linecap="round"/><path d="M9 15h6v2H9z" fill="#8B5A2B"/><path d="M8 20h8" stroke="#6B3F1D" stroke-width="2" stroke-linecap="round"/></svg>
+        <span id="hp-best">0</span>
+      </div>
+      <button class="hp-icon-btn" id="hp-soundBtn" aria-label="Toggle sound" aria-pressed="true" type="button"></button>
+    </div>
+
+    <div class="hp-equation-banner">
+      <span class="hp-eq" id="hp-eqText">6 + 3 = <span class="qmark">?</span></span>
+    </div>
+
+    <div class="hp-scene" id="hp-scene" role="group" aria-label="Lily Pad Leap game">
+      <div class="cloud" style="width:56px;height:22px;top:5%;left:10%;background:#fff;"></div>
+      <div class="cloud" style="width:40px;height:18px;top:8%;left:72%;background:#fff;"></div>
+      <div class="hp-shine" style="width:26%; top:55%; left:6%;"></div>
+      <div class="hp-shine" style="width:18%; top:68%; left:60%;"></div>
+      <div class="hp-shine" style="width:22%; top:82%; left:20%;"></div>
+
+      <div class="hp-lanes" id="hp-lanes">
+        <button class="hp-pad" id="hp-pad0" type="button" data-lane="0"><span class="hp-pad-shape"><span class="hp-pad-num">4</span></span></button>
+        <button class="hp-pad" id="hp-pad1" type="button" data-lane="1"><span class="hp-pad-shape"><span class="hp-pad-num">5</span></span></button>
+        <button class="hp-pad" id="hp-pad2" type="button" data-lane="2"><span class="hp-pad-shape"><span class="hp-pad-num">6</span></span></button>
+      </div>
+
+      <div class="hp-frog-pad" id="hp-frogPad"></div>
+
+      <div class="hp-frog idle" id="hp-frog">
+        <div class="hp-frog-shadow"></div>
+        <div class="hp-speech" id="hp-speech">Ribbit!</div>
+        <div class="hp-frog-rig">
+          <div class="hp-frog-leg left"></div>
+          <div class="hp-frog-leg right"></div>
+          <div class="hp-frog-body"><div class="hp-frog-belly"></div><div class="hp-frog-mouth"></div></div>
+          <div class="hp-frog-eye left"><div class="hp-frog-pupil"></div></div>
+          <div class="hp-frog-eye right"><div class="hp-frog-pupil"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="hp-note">Use ← → to pick a lily pad, then Space or ↑ to hop! You can also just tap a pad.</p>
+  </div>
+
+  <div class="hp-modal-backdrop" id="hp-gameOverBackdrop" hidden>
+    <div class="hp-modal-panel" role="dialog" aria-label="Game over">
+      <h3>Splash! Game Over</h3>
+      <p>You hopped across <b id="hp-finalDistance">0</b> lily pads!</p>
+      <p>Best ever: <b id="hp-finalBest">0</b></p>
+      <div class="hp-modal-actions">
+        <button class="hp-btn-secondary" id="hp-backHomeBtn" type="button">Back to Jungle</button>
+        <button class="hp-btn-primary" id="hp-playAgainBtn" type="button">Play Again</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
   "use strict";
@@ -1857,7 +2185,8 @@
   var homeView = document.getElementById('homeView');
   var gameViews = {
     mango: document.getElementById('view-mango'),
-    phonics: document.getElementById('view-phonics')
+    phonics: document.getElementById('view-phonics'),
+    hop: document.getElementById('view-hop')
   };
 
   function showGame(id){
@@ -1874,6 +2203,7 @@
   }
   document.getElementById('backBtn-mango').addEventListener('click', showHome);
   document.getElementById('backBtn-phonics').addEventListener('click', showHome);
+  document.getElementById('backBtn-hop').addEventListener('click', showHome);
 
   window.LJG = { showGame: showGame, showHome: showHome, gameViews: gameViews };
 
@@ -1883,6 +2213,7 @@
   var leafWordIcon = '<svg viewBox="0 0 40 40" fill="none"><path d="M20 32c-10-2-14-12-9-22 8 1 15 7 15 17 0 2-2 5-6 5z" fill="#4E9351"/><path d="M12 11c6 3 9 10 8 21" stroke="#2F6B3A" stroke-width="1.6" stroke-linecap="round"/></svg>';
 
   var owlIcon = '<svg viewBox="0 0 40 40" fill="none"><ellipse cx="20" cy="25" rx="15" ry="12" fill="#C99A5B"/><circle cx="20" cy="14" r="11" fill="#C99A5B"/><circle cx="15" cy="15" r="5" fill="#fff"/><circle cx="25" cy="15" r="5" fill="#fff"/><circle cx="15" cy="15" r="2.4" fill="#2E2140"/><circle cx="25" cy="15" r="2.4" fill="#2E2140"/><path d="M18 19l2 3 2-3z" fill="#E4620C"/></svg>';
+  var frogIcon = '<svg viewBox="0 0 40 40" fill="none"><ellipse cx="20" cy="24" rx="13" ry="10" fill="#7FBB5C"/><circle cx="12" cy="13" r="6" fill="#7FBB5C"/><circle cx="28" cy="13" r="6" fill="#7FBB5C"/><circle cx="12" cy="13" r="3.4" fill="#fff"/><circle cx="28" cy="13" r="3.4" fill="#fff"/><circle cx="12" cy="13" r="1.6" fill="#1B3B25"/><circle cx="28" cy="13" r="1.6" fill="#1B3B25"/><path d="M14 26c2 2 10 2 12 0" stroke="#2F5A22" stroke-width="1.6" stroke-linecap="round"/></svg>';
 
   var arrowIcon = '<svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var sproutIcon = '<svg viewBox="0 0 24 24" fill="none"><path d="M12 21V10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 12c0-4-4-6-8-5 1 4 4 6 8 5zM12 10c0-4 4-6 8-5-1 4-4 6-8 5z" fill="currentColor"/></svg>';
@@ -1899,6 +2230,12 @@
       title: 'Letter Tower Phonics',
       desc: 'Climb the tower with Ollie the Owl — sounds, blends, magic e and more, floor by floor.',
       status: 'active', viewId: 'phonics'
+    },
+    {
+      subject: 'Speed', accent: '#1F6E96', accentSoft: '#D6ECFB', icon: frogIcon,
+      title: 'Lily Pad Leap',
+      desc: 'Steer Hopper the Frog with arrow keys, hop on the right answer — a splash means one less life.',
+      status: 'active', viewId: 'hop'
     },
     {
       subject: 'Shapes', accent: '#6B4696', accentSoft: '#E8DEF6', icon: shapeIcon,
@@ -3293,5 +3630,357 @@
   }
 
   renderStageMap();
+})();
+</script>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =======================================================
+     LILY PAD LEAP — game logic
+     ======================================================= */
+  var hopView = document.getElementById('view-hop');
+  var scene = document.getElementById('hp-scene');
+  var eqText = document.getElementById('hp-eqText');
+  var pads = [document.getElementById('hp-pad0'), document.getElementById('hp-pad1'), document.getElementById('hp-pad2')];
+  var frogPad = document.getElementById('hp-frogPad');
+  var frog = document.getElementById('hp-frog');
+  var speech = document.getElementById('hp-speech');
+  var lifeFill = document.getElementById('hp-lifeFill');
+  var distanceEl = document.getElementById('hp-distance');
+  var bestEl = document.getElementById('hp-best');
+  var soundBtn = document.getElementById('hp-soundBtn');
+  var gameOverBackdrop = document.getElementById('hp-gameOverBackdrop');
+  var finalDistanceEl = document.getElementById('hp-finalDistance');
+  var finalBestEl = document.getElementById('hp-finalBest');
+  var playAgainBtn = document.getElementById('hp-playAgainBtn');
+  var backHomeBtn = document.getElementById('hp-backHomeBtn');
+
+  var MAX_LIVES = 3;
+  var distance = 0, lives = MAX_LIVES, currentLane = 1, locked = false, current = null;
+  var best = 0, muted = false;
+
+  try { best = parseInt(localStorage.getItem('hop_best'), 10) || 0; } catch(e){}
+  try { muted = localStorage.getItem('hopMuted') === '1'; } catch(e){}
+  bestEl.textContent = best;
+
+  function persistBest(){ try { localStorage.setItem('hop_best', String(best)); } catch(e){} }
+
+  function randInt(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function shuffle(arr){
+    for(var i = arr.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+  function pickPhrase(arr){ return arr[randInt(0, arr.length - 1)]; }
+
+  /* ---------------- sound ---------------- */
+  function speakerIcon(isMuted){
+    if(isMuted){
+      return '<svg viewBox="0 0 24 24" fill="none"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="#1B3B4B"/><path d="M17 8l4 8M21 8l-4 8" stroke="#E0555A" stroke-width="2" stroke-linecap="round"/></svg>';
+    }
+    return '<svg viewBox="0 0 24 24" fill="none"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="#1B3B4B"/><path d="M16 9a4 4 0 010 6M18.5 7a7.5 7.5 0 010 10" stroke="#4E9351" stroke-width="2" stroke-linecap="round"/></svg>';
+  }
+  soundBtn.innerHTML = speakerIcon(muted);
+  soundBtn.setAttribute('aria-pressed', String(!muted));
+  soundBtn.addEventListener('click', function(){
+    muted = !muted;
+    soundBtn.innerHTML = speakerIcon(muted);
+    soundBtn.setAttribute('aria-pressed', String(!muted));
+    try { localStorage.setItem('hopMuted', muted ? '1' : '0'); } catch(e){}
+  });
+
+  var actx = null;
+  function getCtx(){
+    if(!actx){
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if(AC) actx = new AC();
+    }
+    return actx;
+  }
+  function tone(freqFrom, freqTo, dur, startAt, type, peakGain){
+    var ctx = getCtx();
+    if(!ctx || muted) return;
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.type = type || 'sine';
+    var t0 = ctx.currentTime + startAt;
+    osc.frequency.setValueAtTime(freqFrom, t0);
+    osc.frequency.linearRampToValueAtTime(freqTo, t0 + dur);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.linearRampToValueAtTime(peakGain || 0.18, t0 + dur * 0.2);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.05);
+  }
+  function playCorrect(){ tone(520, 700, 0.16, 0, 'triangle', 0.2); }
+  function playWrong(){ tone(360, 140, 0.35, 0, 'sawtooth', 0.14); }
+
+  /* ---------------- difficulty ---------------- */
+  var LEVELS = [
+    { threshold: 0,  name: 'Splash Pad',       max: 10, ops: ['add'] },
+    { threshold: 5,  name: 'Ripple Rookie',    max: 10, ops: ['add', 'sub'] },
+    { threshold: 10, name: 'River Racer',      max: 20, ops: ['add', 'sub'] },
+    { threshold: 18, name: 'Rapids Runner',    max: 20, ops: ['add', 'sub', 'mult'] },
+    { threshold: 28, name: 'Waterfall Master', max: 20, ops: ['add', 'sub', 'mult'] }
+  ];
+  function getLevelIndex(score){
+    var idx = 0;
+    for(var i = 0; i < LEVELS.length; i++){ if(score >= LEVELS[i].threshold) idx = i; }
+    return idx;
+  }
+
+  function buildNumericOptions(answer, maxNumber, extraTry){
+    var options = [answer];
+    var tries = [answer + 1, answer - 1];
+    if(extraTry !== undefined) tries.push(extraTry);
+    tries.push(answer + 2, answer - 2, randInt(0, maxNumber));
+    for(var i = 0; i < tries.length && options.length < 3; i++){
+      var v = tries[i];
+      if(v >= 0 && v <= maxNumber && options.indexOf(v) === -1) options.push(v);
+    }
+    while(options.length < 3){
+      var r = randInt(0, maxNumber);
+      if(options.indexOf(r) === -1) options.push(r);
+    }
+    return shuffle(options);
+  }
+
+  function buildMultOptions(a, b, answer){
+    var options = [answer];
+    var tries = [a * (b + 1), a * Math.max(1, b - 1), (a + 1) * b, Math.max(1, a - 1) * b, answer + a, answer - a, answer + b, answer - b];
+    for(var i = 0; i < tries.length && options.length < 3; i++){
+      var v = tries[i];
+      if(v > 0 && v <= 100 && options.indexOf(v) === -1) options.push(v);
+    }
+    while(options.length < 3){
+      var r = randInt(1, 100);
+      if(options.indexOf(r) === -1) options.push(r);
+    }
+    return shuffle(options);
+  }
+
+  function generateProblem(){
+    var lvl = LEVELS[getLevelIndex(distance)];
+    var op = lvl.ops[randInt(0, lvl.ops.length - 1)];
+    var a, b, answer, symbol, options;
+    if(op === 'add'){
+      a = randInt(0, Math.min(12, lvl.max));
+      b = randInt(0, lvl.max - a);
+      answer = a + b; symbol = '+';
+      options = buildNumericOptions(answer, lvl.max, a);
+    } else if(op === 'sub'){
+      a = randInt(1, lvl.max);
+      b = randInt(0, a);
+      answer = a - b; symbol = '−';
+      options = buildNumericOptions(answer, lvl.max, a);
+    } else {
+      a = randInt(1, 10); b = randInt(1, 10);
+      answer = a * b; symbol = '×';
+      options = buildMultOptions(a, b, answer);
+    }
+    return { a: a, b: b, symbol: symbol, answer: answer, options: options };
+  }
+
+  /* ---------------- scene helpers ---------------- */
+  function pctRelativeTo(el, container){
+    var r = el.getBoundingClientRect(), c = container.getBoundingClientRect();
+    if(c.width === 0) return null;
+    return ((r.left + r.width / 2 - c.left) / c.width) * 100;
+  }
+
+  function moveFrogToLane(lane){
+    var pct = pctRelativeTo(pads[lane], scene);
+    if(pct === null) return;
+    frog.style.left = pct + '%';
+    frogPad.style.left = pct + '%';
+  }
+
+  function updateLaneHighlight(){
+    pads.forEach(function(p, i){ p.classList.toggle('selected', i === currentLane); });
+  }
+
+  function setLane(lane){
+    currentLane = Math.max(0, Math.min(2, lane));
+    moveFrogToLane(currentLane);
+    updateLaneHighlight();
+  }
+
+  function showSpeech(text, mood){
+    speech.textContent = text;
+    speech.className = 'hp-speech show' + (mood ? ' ' + mood : '');
+    window.clearTimeout(showSpeech._t);
+    showSpeech._t = window.setTimeout(function(){ speech.classList.remove('show'); }, 1100);
+  }
+
+  var confettiColors = ['#FFD34D', '#4E9351', '#7FBB5C', '#3FA9DC', '#FFFFFF'];
+  function spawnConfetti(xPct, yPct){
+    for(var i = 0; i < 14; i++){
+      var piece = document.createElement('div');
+      piece.className = 'hp-confetti';
+      piece.style.left = xPct + '%';
+      piece.style.top = yPct + '%';
+      piece.style.background = confettiColors[randInt(0, confettiColors.length - 1)];
+      piece.style.setProperty('--dx', randInt(-70, 70) + 'px');
+      piece.style.setProperty('--dy', randInt(40, 110) + 'px');
+      piece.style.setProperty('--rot', randInt(90, 360) + 'deg');
+      scene.appendChild(piece);
+      (function(p){ window.setTimeout(function(){ p.remove(); }, 1050); })(piece);
+    }
+  }
+
+  function spawnSplashRings(xPct, yPct){
+    for(var i = 0; i < 3; i++){
+      var ring = document.createElement('div');
+      ring.className = 'hp-splash-ring';
+      ring.style.left = xPct + '%';
+      ring.style.top = yPct + '%';
+      ring.style.animationDelay = (i * 90) + 'ms';
+      scene.appendChild(ring);
+      (function(r){ window.setTimeout(function(){ r.remove(); }, 900); })(ring);
+    }
+  }
+
+  /* ---------------- round flow ---------------- */
+  function renderProblem(){
+    current = generateProblem();
+    eqText.innerHTML = current.a + ' ' + current.symbol + ' ' + current.b + ' = <span class="qmark">?</span>';
+    pads.forEach(function(pad, i){
+      var num = pad.querySelector('.hp-pad-num');
+      num.textContent = current.options[i];
+      pad.dataset.value = current.options[i];
+      pad.classList.remove('correct', 'wrong');
+      pad.disabled = false;
+    });
+    setLane(1);
+  }
+
+  function updateLifeBar(){
+    var pct = (lives / MAX_LIVES) * 100;
+    lifeFill.style.width = pct + '%';
+    lifeFill.classList.remove('mid', 'low');
+    if(lives <= 1) lifeFill.classList.add('low');
+    else if(lives < MAX_LIVES) lifeFill.classList.add('mid');
+  }
+
+  var hopPhrases = ['Ribbit-tastic!', 'Hop hop hooray!', 'Splash-free landing!', 'Nice jump!', 'Lily-perfect!', 'Great hop!'];
+  var oopsPhrases = ['Splash! Try again!', 'Oops, wet feet!', 'So close, hop again!', 'Whoops!', 'Try once more!'];
+
+  function hop(){
+    if(!current || locked) return;
+    locked = true;
+    var lane = currentLane;
+    pads.forEach(function(p){ p.disabled = true; });
+    var chosenVal = Number(pads[lane].dataset.value);
+    var isCorrect = chosenVal === current.answer;
+
+    window.setTimeout(function(){
+      var xPct = pctRelativeTo(pads[lane], scene) || 50;
+      var yPct = 24;
+
+      if(isCorrect){
+        frog.classList.remove('idle');
+        frog.classList.add('hop');
+        pads[lane].classList.add('correct');
+        showSpeech(pickPhrase(hopPhrases), 'happy');
+        spawnConfetti(xPct, yPct);
+        playCorrect();
+
+        distance += 1;
+        distanceEl.textContent = distance;
+        if(distance > best){
+          best = distance;
+          bestEl.textContent = best;
+          persistBest();
+        }
+
+        window.setTimeout(function(){
+          frog.classList.remove('hop');
+          frog.classList.add('idle');
+          locked = false;
+          renderProblem();
+        }, 500);
+      } else {
+        frog.classList.remove('idle');
+        frog.classList.add('splash');
+        pads[lane].classList.add('wrong');
+        showSpeech(pickPhrase(oopsPhrases), 'oops');
+        spawnSplashRings(xPct, yPct);
+        playWrong();
+
+        lives -= 1;
+        updateLifeBar();
+
+        if(lives <= 0){
+          window.setTimeout(function(){ gameOver(); }, 700);
+        } else {
+          window.setTimeout(function(){
+            frog.classList.remove('splash');
+            setLane(1);
+            frog.classList.add('recovering');
+            window.setTimeout(function(){
+              frog.classList.remove('recovering');
+              frog.classList.add('idle');
+              locked = false;
+              renderProblem();
+            }, 450);
+          }, 700);
+        }
+      }
+    }, 200);
+  }
+
+  pads.forEach(function(pad, i){
+    pad.addEventListener('click', function(){
+      if(locked) return;
+      setLane(i);
+      hop();
+    });
+  });
+
+  function gameOver(){
+    finalDistanceEl.textContent = distance;
+    finalBestEl.textContent = best;
+    gameOverBackdrop.hidden = false;
+  }
+
+  function startGame(){
+    distance = 0;
+    lives = MAX_LIVES;
+    locked = false;
+    distanceEl.textContent = 0;
+    updateLifeBar();
+    frog.className = 'hp-frog idle';
+    gameOverBackdrop.hidden = true;
+    renderProblem();
+  }
+
+  playAgainBtn.addEventListener('click', function(){
+    gameOverBackdrop.hidden = true;
+    startGame();
+  });
+  backHomeBtn.addEventListener('click', function(){
+    gameOverBackdrop.hidden = true;
+    if(window.LJG) window.LJG.showHome();
+  });
+
+  document.addEventListener('keydown', function(e){
+    if(hopView.hidden || !gameOverBackdrop.hidden) return;
+    if(e.key === 'ArrowLeft'){ e.preventDefault(); if(!locked) setLane(currentLane - 1); }
+    else if(e.key === 'ArrowRight'){ e.preventDefault(); if(!locked) setLane(currentLane + 1); }
+    else if(e.key === 'ArrowUp' || e.key === ' ' || e.key === 'Spacebar' || e.key === 'Enter'){ e.preventDefault(); hop(); }
+  });
+
+  // Restart fresh every time this game's view is opened (no mid-run resume).
+  var hopObserver = new MutationObserver(function(){
+    if(!hopView.hidden) startGame();
+  });
+  hopObserver.observe(hopView, { attributes: true, attributeFilter: ['hidden'] });
+
+  startGame();
 })();
 </script>
