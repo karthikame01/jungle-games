@@ -636,6 +636,26 @@
   @keyframes mtmArmUpL{ 0%,100%{ transform:rotate(18deg); } 30%,70%{ transform:rotate(-150deg); } }
   @keyframes mtmArmUpR{ 0%,100%{ transform:rotate(-18deg); } 30%,70%{ transform:rotate(150deg); } }
 
+  .mtm-monkey.drumming .mtm-body-wrap{ animation:mtmLandBounce .3s ease-out; }
+  @keyframes mtmLandBounce{
+    0%{ transform:translateY(-18%) scale(.95,1.06); }
+    100%{ transform:translateY(0) scale(1,1); }
+  }
+  .mtm-monkey.drumming .mtm-arm.left{ animation:mtmDrumL .26s ease-in-out 3; }
+  .mtm-monkey.drumming .mtm-arm.right{ animation:mtmDrumR .26s ease-in-out 3; animation-delay:.13s; }
+  @keyframes mtmDrumL{ 0%,100%{ transform:rotate(18deg); } 50%{ transform:rotate(75deg); } }
+  @keyframes mtmDrumR{ 0%,100%{ transform:rotate(-18deg); } 50%{ transform:rotate(-75deg); } }
+
+  .mtm-monkey.winking .mtm-body-wrap{ animation:mtmWinkPop .7s ease-in-out; }
+  @keyframes mtmWinkPop{
+    0%,100%{ transform:translateY(0) scale(1); }
+    35%,70%{ transform:translateY(-16%) scale(1.08); }
+  }
+  .mtm-monkey.winking .mtm-eye.left{ animation:mtmWinkEye .7s ease-in-out; }
+  @keyframes mtmWinkEye{ 0%,20%,100%{ transform:scaleY(1); } 40%,80%{ transform:scaleY(.1); } }
+  .mtm-monkey.winking .mtm-arm.right{ animation:mtmThumbUp .7s ease-in-out; }
+  @keyframes mtmThumbUp{ 0%,100%{ transform:rotate(-18deg); } 30%,70%{ transform:rotate(-105deg); } }
+
   .mtm-monkey.falling .mtm-body-wrap{ animation:mtmFallDown .8s cubic-bezier(.55,0,1,.45) forwards; }
   @keyframes mtmFallDown{
     0%{ transform:translateY(0) rotate(0deg); opacity:1; }
@@ -649,13 +669,30 @@
     100%{ transform:scale(1); opacity:1; }
   }
 
-  /* mild wrong-answer variant: a puzzled head-shake in place, no fall */
+  /* mild wrong-answer variants: react in place, no fall */
   .mtm-monkey.confused .mtm-body-wrap{ animation:mtmConfusedShake .45s ease-in-out 2; }
   @keyframes mtmConfusedShake{
     0%,100%{ transform:rotate(0deg); }
     25%{ transform:rotate(-9deg); }
     75%{ transform:rotate(9deg); }
   }
+
+  .mtm-monkey.facepalm .mtm-body-wrap{ animation:mtmSlump .9s ease-out forwards; }
+  @keyframes mtmSlump{ 0%{ transform:translateY(0); } 100%{ transform:translateY(4%) scale(1,.97); } }
+  .mtm-monkey.facepalm .mtm-arm.right{ animation:mtmFacepalm .9s ease-in-out forwards; }
+  @keyframes mtmFacepalm{
+    0%{ transform:rotate(-18deg); }
+    40%,100%{ transform:rotate(-165deg); }
+  }
+
+  .mtm-monkey.sulking .mtm-body-wrap{ animation:mtmSulkSway .55s ease-in-out 2; }
+  @keyframes mtmSulkSway{
+    0%,100%{ transform:rotate(0deg) translateY(2%); }
+    50%{ transform:rotate(-5deg) translateY(4%); }
+  }
+  .mtm-monkey.sulking .mtm-ear{ transition:transform .3s ease; }
+  .mtm-monkey.sulking .mtm-ear.left{ transform:rotate(-15deg) translateY(10%); }
+  .mtm-monkey.sulking .mtm-ear.right{ transform:rotate(15deg) translateY(10%); }
 
   .mtm-speech{
     position:absolute;
@@ -2241,11 +2278,11 @@
   var correctPhrases = [
     'Yum! Correct!', 'Munch munch, nice!', 'Mango magic!', 'You nailed it!', 'Sweet, that\'s right!',
     'Whoosh, great catch!', 'Ta-da! Right answer!', 'Brainy banana... I mean mango!', 'Monkey business, well done!',
-    'That\'s bananas-good!', 'Ooh ooh ah ah, correct!', 'Ripe and right!'
+    'That\'s bananas-good!', 'Ooh ooh ah ah, correct!', 'Ripe and right!', 'Chest-thump champion!', 'Wink wink, nailed it!'
   ];
   var wrongPhrases = [
     'Oops, try again!', 'Whoops, not that one!', 'So close, try again!', 'Oh no, slipped!', 'Almost! One more try!',
-    'Not quite, try again!', 'Butter mangos, missed it!', 'Hmm, that one got away!'
+    'Not quite, try again!', 'Butter mangos, missed it!', 'Hmm, that one got away!', 'Facepalm! So close.', 'Aww, try once more!'
   ];
   var STREAK_MILESTONES = {
     3: '3 in a row! You\'re on fire!',
@@ -2278,7 +2315,7 @@
     recapBackdrop.hidden = false;
   }
 
-  var CELEBRATION_VARIANTS = ['leaping', 'spinning', 'cheering'];
+  var CELEBRATION_VARIANTS = ['leaping', 'spinning', 'cheering', 'drumming', 'winking'];
 
   function handleCorrect(branch){
     locked = true;
@@ -2343,9 +2380,11 @@
     showSpeech(pickPhrase(wrongPhrases));
 
     monkey.classList.remove('idle');
-    var takesATumble = Math.random() < 0.6;
+    var IN_PLACE_VARIANT_DURATIONS = { confused: 1150, facepalm: 1100, sulking: 1150 };
+    var WRONG_VARIANTS = ['falling', 'falling', 'falling', 'confused', 'confused', 'facepalm', 'sulking'];
+    var variant = WRONG_VARIANTS[randInt(0, WRONG_VARIANTS.length - 1)];
 
-    if(takesATumble){
+    if(variant === 'falling'){
       monkey.classList.add('falling');
       window.setTimeout(function(){
         monkey.classList.remove('falling');
@@ -2359,13 +2398,14 @@
         finishRound(true);
       }, 1650);
     } else {
-      monkey.classList.add('confused', 'dizzy');
+      monkey.classList.add(variant);
+      if(variant === 'confused') monkey.classList.add('dizzy');
       window.setTimeout(function(){
-        monkey.classList.remove('confused', 'dizzy');
+        monkey.classList.remove(variant, 'dizzy');
         monkey.classList.add('idle');
         locked = false;
         finishRound(true);
-      }, 1150);
+      }, IN_PLACE_VARIANT_DURATIONS[variant]);
     }
   }
 
