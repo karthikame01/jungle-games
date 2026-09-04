@@ -614,6 +614,28 @@
     100%{ transform:translateY(0) rotate(0deg) scale(1,1); }
   }
 
+  /* correct-answer celebration variants */
+  .mtm-monkey.spinning .mtm-body-wrap{ animation:mtmSpinArc .6s ease-in-out; }
+  @keyframes mtmSpinArc{
+    0%{ transform:translateY(0) rotate(0deg) scale(1); }
+    50%{ transform:translateY(-30%) rotate(180deg) scale(1.08); }
+    100%{ transform:translateY(0) rotate(360deg) scale(1); }
+  }
+
+  .mtm-monkey.cheering .mtm-body-wrap{ animation:mtmHopCheer .7s ease-in-out; }
+  @keyframes mtmHopCheer{
+    0%{ transform:translateY(0) scale(1,1); }
+    20%{ transform:translateY(-16%) scale(.94,1.08); }
+    40%{ transform:translateY(2%) scale(1.08,.9); }
+    60%{ transform:translateY(-20%) scale(.94,1.08); }
+    80%{ transform:translateY(2%) scale(1.05,.95); }
+    100%{ transform:translateY(0) scale(1,1); }
+  }
+  .mtm-monkey.cheering .mtm-arm.left{ animation:mtmArmUpL .7s ease-in-out; }
+  .mtm-monkey.cheering .mtm-arm.right{ animation:mtmArmUpR .7s ease-in-out; }
+  @keyframes mtmArmUpL{ 0%,100%{ transform:rotate(18deg); } 30%,70%{ transform:rotate(-150deg); } }
+  @keyframes mtmArmUpR{ 0%,100%{ transform:rotate(-18deg); } 30%,70%{ transform:rotate(150deg); } }
+
   .mtm-monkey.falling .mtm-body-wrap{ animation:mtmFallDown .8s cubic-bezier(.55,0,1,.45) forwards; }
   @keyframes mtmFallDown{
     0%{ transform:translateY(0) rotate(0deg); opacity:1; }
@@ -625,6 +647,14 @@
     0%{ transform:scale(.4); opacity:0; }
     70%{ transform:scale(1.12); opacity:1; }
     100%{ transform:scale(1); opacity:1; }
+  }
+
+  /* mild wrong-answer variant: a puzzled head-shake in place, no fall */
+  .mtm-monkey.confused .mtm-body-wrap{ animation:mtmConfusedShake .45s ease-in-out 2; }
+  @keyframes mtmConfusedShake{
+    0%,100%{ transform:rotate(0deg); }
+    25%{ transform:rotate(-9deg); }
+    75%{ transform:rotate(9deg); }
   }
 
   .mtm-speech{
@@ -2208,9 +2238,29 @@
     }
   }
 
-  var correctPhrases = ['Yum! Correct!', 'Munch munch, nice!', 'Mango magic!', 'You nailed it!', 'Sweet, that\'s right!', 'Whoosh, great catch!'];
-  var wrongPhrases = ['Oops, try again!', 'Whoops, not that one!', 'So close, try again!', 'Oh no, slipped!', 'Almost! One more try!'];
+  var correctPhrases = [
+    'Yum! Correct!', 'Munch munch, nice!', 'Mango magic!', 'You nailed it!', 'Sweet, that\'s right!',
+    'Whoosh, great catch!', 'Ta-da! Right answer!', 'Brainy banana... I mean mango!', 'Monkey business, well done!',
+    'That\'s bananas-good!', 'Ooh ooh ah ah, correct!', 'Ripe and right!'
+  ];
+  var wrongPhrases = [
+    'Oops, try again!', 'Whoops, not that one!', 'So close, try again!', 'Oh no, slipped!', 'Almost! One more try!',
+    'Not quite, try again!', 'Butter mangos, missed it!', 'Hmm, that one got away!'
+  ];
+  var STREAK_MILESTONES = {
+    3: '3 in a row! You\'re on fire!',
+    5: 'High five! 5 in a row!',
+    8: 'Whoa, 8 in a row!',
+    10: 'Double digits! 10 in a row!',
+    15: 'Unstoppable! 15 in a row!',
+    20: 'Jungle legend! 20 in a row!'
+  };
   function pickPhrase(arr){ return arr[randInt(0, arr.length - 1)]; }
+  function milestonePhraseFor(streakVal){
+    if(STREAK_MILESTONES[streakVal]) return STREAK_MILESTONES[streakVal];
+    if(streakVal > 20 && streakVal % 10 === 0) return 'Incredible! ' + streakVal + ' in a row!';
+    return null;
+  }
 
   function finishRound(keepProblem){
     if(sessionAnswered > 0 && sessionAnswered % 10 === 0){
@@ -2228,6 +2278,8 @@
     recapBackdrop.hidden = false;
   }
 
+  var CELEBRATION_VARIANTS = ['leaping', 'spinning', 'cheering'];
+
   function handleCorrect(branch){
     locked = true;
     playCorrect();
@@ -2236,7 +2288,8 @@
     monkey.classList.remove('idle');
     monkey.classList.add('airborne');
     setMonkeyPos(branch.left, branch.top - 6);
-    monkey.classList.add('leaping');
+    var celebration = CELEBRATION_VARIANTS[randInt(0, CELEBRATION_VARIANTS.length - 1)];
+    monkey.classList.add(celebration);
 
     var prevLevelIdx = getLevelIndex(score);
     score += 1;
@@ -2251,8 +2304,11 @@
     bestEl.textContent = bestStreak;
 
     var leveledUp = settings.autoLevel && getLevelIndex(score) > prevLevelIdx;
+    var milestonePhrase = milestonePhraseFor(streak);
     if(leveledUp){
       showSpeech('Level Up! ' + LEVELS[getLevelIndex(score)].name, 'happy');
+    } else if(milestonePhrase){
+      showSpeech(milestonePhrase, 'happy');
     } else {
       showSpeech(pickPhrase(correctPhrases), 'happy');
     }
@@ -2260,10 +2316,11 @@
     window.setTimeout(function(){
       branch.el.classList.add('correct-pop');
       spawnConfetti(branch.left, branch.top);
+      if(milestonePhrase) spawnConfetti(50, 40);
     }, 260);
 
     window.setTimeout(function(){
-      monkey.classList.remove('leaping');
+      monkey.classList.remove(celebration);
       setMonkeyPos(50, 66);
     }, 900);
 
@@ -2286,20 +2343,30 @@
     showSpeech(pickPhrase(wrongPhrases));
 
     monkey.classList.remove('idle');
-    monkey.classList.add('falling');
+    var takesATumble = Math.random() < 0.6;
 
-    window.setTimeout(function(){
-      monkey.classList.remove('falling');
-      setMonkeyPos(50, 66);
-      monkey.classList.add('recovering', 'dizzy');
-    }, 820);
-
-    window.setTimeout(function(){
-      monkey.classList.remove('recovering', 'dizzy');
-      monkey.classList.add('idle');
-      locked = false;
-      finishRound(true);
-    }, 1650);
+    if(takesATumble){
+      monkey.classList.add('falling');
+      window.setTimeout(function(){
+        monkey.classList.remove('falling');
+        setMonkeyPos(50, 66);
+        monkey.classList.add('recovering', 'dizzy');
+      }, 820);
+      window.setTimeout(function(){
+        monkey.classList.remove('recovering', 'dizzy');
+        monkey.classList.add('idle');
+        locked = false;
+        finishRound(true);
+      }, 1650);
+    } else {
+      monkey.classList.add('confused', 'dizzy');
+      window.setTimeout(function(){
+        monkey.classList.remove('confused', 'dizzy');
+        monkey.classList.add('idle');
+        locked = false;
+        finishRound(true);
+      }, 1150);
+    }
   }
 
   branches.forEach(function(branch){
