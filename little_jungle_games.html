@@ -2656,12 +2656,12 @@
 
   var selectedVoiceKey = null;
   try { selectedVoiceKey = localStorage.getItem('pt_voiceKey'); } catch(e){}
-  function voiceKey(v){ return v.name + '|' + v.lang; }
-  function getSelectedVoice(){
+  function entryKey(entry){ return entry.voice.name + '|' + entry.voice.lang + '|' + entry.flavor; }
+  function findSelectedEntry(){
     if(!ttsAvailable || !selectedVoiceKey) return null;
-    var voices = window.speechSynthesis.getVoices();
-    for(var i = 0; i < voices.length; i++){
-      if(voiceKey(voices[i]) === selectedVoiceKey) return voices[i];
+    var list = buildCuratedVoiceList();
+    for(var i = 0; i < list.length; i++){
+      if(entryKey(list[i]) === selectedVoiceKey) return list[i];
     }
     return null;
   }
@@ -2671,9 +2671,9 @@
     try {
       window.speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(text);
-      u.rate = 0.85; u.pitch = 1.05;
-      var v = getSelectedVoice();
-      if(v) u.voice = v;
+      var entry = findSelectedEntry();
+      if(entry){ u.voice = entry.voice; u.rate = entry.rate; u.pitch = entry.pitch; }
+      else { u.rate = 0.85; u.pitch = 1.05; }
       window.speechSynthesis.speak(u);
     } catch(e){}
   }
@@ -2737,6 +2737,12 @@
   var complexityDoneBtn = document.getElementById('pt-complexityDoneBtn');
 
   /* ---------------- voice picker ---------------- */
+  // We can't inspect a browser voice's actual timbre, only its name/lang. So
+  // rather than dumping every OS voice (some systems expose 20+), curate a
+  // fixed set of 5 well-differentiated options: 2 male "characters" and 3
+  // female "characters", each with a distinct rate/pitch so they're audibly
+  // different even when the underlying system only offers one real male or
+  // female voice to draw from.
   var FEMALE_HINTS = ['female', 'zira', 'samantha', 'susan', 'karen', 'moira', 'tessa', 'veena', 'fiona', 'victoria', 'allison', 'ava', 'serena', 'kate', 'salli', 'joanna', 'kimberly', 'ivy', 'emma', 'amy', 'nicole', 'olivia', 'aria', 'jenny', 'sonia', 'libby', 'maisie', 'natasha', 'catherine', 'hazel', 'shelley', 'zoe', 'heera'];
   var MALE_HINTS = ['male', 'david', 'mark', 'daniel', 'fred', 'alex', 'tom', 'george', 'james', 'ryan', 'guy', 'eric', 'matthew', 'justin', 'kevin', 'brian', 'christopher', 'russell', 'oliver', 'arthur'];
   function guessGender(name){
@@ -2746,21 +2752,53 @@
     return 'unknown';
   }
 
+  var MALE_SLOTS = [
+    { flavor: 'Clear & Crisp', rate: 0.95, pitch: 1.12 },
+    { flavor: 'Soft & Gentle', rate: 0.82, pitch: 0.85 }
+  ];
+  var FEMALE_SLOTS = [
+    { flavor: 'Bright & Cheerful', rate: 0.95, pitch: 1.2 },
+    { flavor: 'Warm & Friendly', rate: 0.87, pitch: 1.0 },
+    { flavor: 'Soft & Gentle', rate: 0.8, pitch: 0.9 }
+  ];
+
+  function buildCuratedVoiceList(){
+    if(!ttsAvailable) return [];
+    var all = window.speechSynthesis.getVoices();
+    var en = all.filter(function(v){ return v.lang.toLowerCase().indexOf('en') === 0; });
+    if(en.length === 0) en = all;
+    var males = en.filter(function(v){ return guessGender(v.name) === 'male'; });
+    var females = en.filter(function(v){ return guessGender(v.name) === 'female'; });
+
+    var list = [];
+    MALE_SLOTS.forEach(function(slot, i){
+      if(males.length === 0) return;
+      var voice = males[i % males.length];
+      list.push({ voice: voice, gender: 'male', flavor: slot.flavor, rate: slot.rate, pitch: slot.pitch });
+    });
+    FEMALE_SLOTS.forEach(function(slot, i){
+      if(females.length === 0) return;
+      var voice = females[i % females.length];
+      list.push({ voice: voice, gender: 'female', flavor: slot.flavor, rate: slot.rate, pitch: slot.pitch });
+    });
+    return list;
+  }
+
   var playIconSvg = '<svg viewBox="0 0 24 24" fill="none"><path d="M6 4l14 8-14 8V4z" fill="currentColor"/></svg>';
   var checkIconSvg = '<svg viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5 9-10" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
-  function previewVoice(voice){
+  function previewVoice(entry){
     if(!ttsAvailable) return;
     try {
       window.speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance("Hi! I'm Ollie the Owl. Let's learn phonics!");
-      u.voice = voice; u.rate = 0.9; u.pitch = 1.05;
+      u.voice = entry.voice; u.rate = entry.rate; u.pitch = entry.pitch;
       window.speechSynthesis.speak(u);
     } catch(e){}
   }
 
-  function selectVoice(voice){
-    selectedVoiceKey = voiceKey(voice);
+  function selectVoice(entry){
+    selectedVoiceKey = entryKey(entry);
     try { localStorage.setItem('pt_voiceKey', selectedVoiceKey); } catch(e){}
     renderVoiceList();
   }
@@ -2770,23 +2808,15 @@
       voiceList.innerHTML = '<p class="pt-voice-empty">Voice reading isn\'t available on this device or browser.</p>';
       return;
     }
-    var voices = window.speechSynthesis.getVoices().filter(function(v){ return v.lang.toLowerCase().indexOf('en') === 0; });
-    if(voices.length === 0) voices = window.speechSynthesis.getVoices();
-    if(voices.length === 0){
+    var list = buildCuratedVoiceList();
+    if(list.length === 0){
       voiceList.innerHTML = '<p class="pt-voice-empty">Loading voices… try opening this again in a moment.</p>';
       return;
     }
-    var tagged = voices.map(function(v){ return { voice: v, gender: guessGender(v.name) }; });
-    var order = { female: 0, male: 1, unknown: 2 };
-    tagged.sort(function(a, b){
-      if(order[a.gender] !== order[b.gender]) return order[a.gender] - order[b.gender];
-      return a.voice.name.localeCompare(b.voice.name);
-    });
 
     voiceList.innerHTML = '';
-    tagged.forEach(function(item){
-      var v = item.voice;
-      var key = voiceKey(v);
+    list.forEach(function(entry){
+      var key = entryKey(entry);
       var row = document.createElement('div');
       row.className = 'pt-voice-row' + (key === selectedVoiceKey ? ' selected' : '');
 
@@ -2797,10 +2827,9 @@
       var main = document.createElement('span');
       main.className = 'pt-voice-row-main';
       main.innerHTML =
-        '<span class="pt-voice-name">' + v.name + '</span>' +
+        '<span class="pt-voice-name">' + entry.flavor + '</span>' +
         '<span class="pt-voice-meta">' +
-          '<span class="pt-voice-badge ' + item.gender + '">' + (item.gender === 'unknown' ? 'Voice' : item.gender) + '</span>' +
-          '<span class="pt-voice-lang">' + v.lang + '</span>' +
+          '<span class="pt-voice-badge ' + entry.gender + '">' + entry.gender + '</span>' +
         '</span>';
 
       var previewBtn = document.createElement('button');
@@ -2809,13 +2838,13 @@
       previewBtn.innerHTML = playIconSvg + ' Preview';
       previewBtn.addEventListener('click', function(ev){
         ev.stopPropagation();
-        previewVoice(v);
+        previewVoice(entry);
       });
 
       row.appendChild(check);
       row.appendChild(main);
       row.appendChild(previewBtn);
-      row.addEventListener('click', function(){ selectVoice(v); });
+      row.addEventListener('click', function(){ selectVoice(entry); });
 
       voiceList.appendChild(row);
     });
