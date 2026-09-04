@@ -1152,6 +1152,7 @@
     border-radius:999px; width:36px; height:36px;
     display:flex; align-items:center; justify-content:center; cursor:pointer;
   }
+  .pt-hud-btn[hidden]{ display:none; }
   .pt-hud-title{
     font-family:'Baloo 2',sans-serif; font-weight:700; font-size:14px;
     color:var(--pt-ink);
@@ -1192,6 +1193,7 @@
     position:absolute; left:0; right:0; top:8%;
     display:flex; justify-content:space-around; gap:10px; padding:0 6%;
   }
+  .pt-tiles[hidden]{ display:none; }
   .pt-tile{
     flex:1;
     background:var(--pt-parchment);
@@ -2643,6 +2645,14 @@
 
   /* ---------------- speech ---------------- */
   var ttsAvailable = 'speechSynthesis' in window;
+  var pendingSpeakTimeout = null;
+  function scheduleSpeak(text, delay){
+    if(pendingSpeakTimeout) window.clearTimeout(pendingSpeakTimeout);
+    pendingSpeakTimeout = window.setTimeout(function(){
+      pendingSpeakTimeout = null;
+      speak(text);
+    }, delay);
+  }
 
   var selectedVoiceKey = null;
   try { selectedVoiceKey = localStorage.getItem('pt_voiceKey'); } catch(e){}
@@ -2962,10 +2972,11 @@
     });
     promptText.textContent = ttsAvailable ? activeStage.promptLabel : 'Read the word and tap the match: ' + current.spoken;
     progressBar.style.width = Math.round((qIndex / QUESTIONS_PER_STAGE) * 100) + '%';
-    window.setTimeout(function(){ speak(current.spoken); }, 250);
+    scheduleSpeak(current.spoken, 250);
   }
 
   function startStage(stage){
+    stopSpeech();
     activeStage = stage;
     qIndex = 0;
     sessionCorrect = 0;
@@ -3068,7 +3079,7 @@
   function completeSyllableWord(){
     locked = true;
     showSpeech(pickPhrase(correctPhrases), 'happy');
-    window.setTimeout(function(){ speak(current.spoken); }, 200);
+    scheduleSpeak(current.spoken, 200);
 
     var rect = syllableTilesEl.getBoundingClientRect();
     var sceneRect = scene.getBoundingClientRect();
@@ -3159,7 +3170,18 @@
   });
   speakerBtn.addEventListener('click', function(){ if(current) speak(current.spoken); });
 
+  function stopSpeech(){
+    if(pendingSpeakTimeout){
+      window.clearTimeout(pendingSpeakTimeout);
+      pendingSpeakTimeout = null;
+    }
+    if(ttsAvailable){
+      try { window.speechSynthesis.cancel(); } catch(e){}
+    }
+  }
+
   function finishStage(){
+    stopSpeech();
     var stars = sessionCorrect >= 7 ? 3 : sessionCorrect >= 5 ? 2 : sessionCorrect >= 1 ? 1 : 0;
     var prevBest = starsFor(activeStage.id);
     progress[activeStage.id] = { cleared: true, stars: Math.max(stars, prevBest) };
@@ -3173,25 +3195,30 @@
   }
 
   btnRetry.addEventListener('click', function(){
+    stopSpeech();
     completeBackdrop.hidden = true;
     startStage(activeStage);
   });
   btnBackToMap.addEventListener('click', function(){
+    stopSpeech();
     completeBackdrop.hidden = true;
     playView.hidden = true;
     mapView.hidden = false;
     renderStageMap();
   });
   btnNextStage.addEventListener('click', function(){
+    stopSpeech();
     completeBackdrop.hidden = true;
     var next = PT_STAGES[activeStage.id];
     if(next) startStage(next);
   });
   btnMapFromPlay.addEventListener('click', function(){
+    stopSpeech();
     playView.hidden = true;
     mapView.hidden = false;
     renderStageMap();
   });
+  document.getElementById('backBtn-phonics').addEventListener('click', stopSpeech);
 
   /* ---------------- magic-e demo ---------------- */
   function sparkleBurst(el){
@@ -3219,7 +3246,7 @@
     var castHandler = function(){
       sparkleBurst(magicWord);
       magicWord.innerHTML = 'c<span class="glow-vowel">a</span>p<span class="silent-e">e</span>';
-      window.setTimeout(function(){ speak('cape'); }, 300);
+      scheduleSpeak('cape', 300);
       wandBtn.hidden = true;
       magicStartBtn.hidden = false;
       progress.seenMagicEDemo = true;
