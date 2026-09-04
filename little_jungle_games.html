@@ -2590,7 +2590,7 @@
     { id: 4, mode: 'word', title: 'Blend Buddies', subtitle: 'bl · cr · st · tr & more', iconText: 'bl', bank: PT_BANK_BLENDS, promptLabel: 'Listen and tap the matching word!' },
     { id: 5, mode: 'word', title: 'Magic E Spell', subtitle: 'Silent e word magic', iconText: 'e✨', bank: PT_BANK_MAGICE, promptLabel: 'Listen and tap the matching word!', hasDemo: true },
     { id: 6, mode: 'word', title: 'Vowel Team Trail', subtitle: 'ee · ai · oa · ay & more', iconText: 'ee', bank: PT_BANK_VOWELTEAMS, promptLabel: 'Listen and tap the matching word!' },
-    { id: 7, mode: 'syllable', title: 'Syllable Steps', subtitle: 'Read words syllable by syllable', iconText: 'ta·co', promptLabel: 'Tap the syllables in order to read the word!', hasSlider: true }
+    { id: 7, mode: 'syllable', title: 'Syllable Steps', subtitle: 'Read words syllable by syllable', iconText: 'ta·co', promptLabel: 'Tap each part, left to right, to read the word!', hasSlider: true }
   ];
   var QUESTIONS_PER_STAGE = 8;
   var SYLLABLE_TIERS = { 2: PT_SYLLABLE_TIER2, 3: PT_SYLLABLE_TIER3, 4: PT_SYLLABLE_TIER4 };
@@ -3026,7 +3026,9 @@
     syllableProgress = 0;
     syllableMistake = false;
 
-    var order = shuffle(syllables.map(function(_, idx){ return idx; }));
+    // Tiles stay in natural reading order (left to right) — this is a
+    // read-it-aloud exercise, not an unscramble puzzle.
+    var order = syllables.map(function(_, idx){ return idx; });
     syllableTilesEl.innerHTML = '';
     order.forEach(function(origIndex){
       var btn = document.createElement('button');
